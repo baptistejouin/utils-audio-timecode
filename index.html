@@ -93,6 +93,16 @@
           ).padStart(2, "0")}:${String(milliseconds).padStart(3, "0")}`;
         });
 
+        timeInput.addEventListener("keydown", function (event) {
+          if (event.key === "Enter") {
+            const time = timeInput.value.split(":");
+            const minutes = parseInt(time[0]);
+            const seconds = parseInt(time[1]);
+            const milliseconds = parseInt(time[2]);
+            audio.currentTime = minutes * 60 + seconds + milliseconds / 1000;
+          }
+        });
+
         document
           .getElementById("fileInput")
           .addEventListener("change", function (e) {
@@ -115,6 +125,7 @@
             focusedElement !== "input" &&
             (event.key === " " || event.key === "k")
           ) {
+            console.log("prevent");
             event.preventDefault();
             if (audio.paused) {
               audio.play();
