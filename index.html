@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Uploader une musique</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        min-height: 80vh;
+        padding-top: 20vh;
+        margin: 0;
+      }
+
+      #musicPlayer {
+        margin-top: 20px;
+        width: 80%;
+      }
+
+      #musicPlayer audio {
+        width: 100%;
+      }
+
+      #markers {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+        margin-block: 20px;
+      }
+
+      #timeCode {
+        margin-top: 20px;
+        padding: 8px;
+        text-align: center;
+        font-size: 72px;
+      }
+
+      .flex {
+        display: flex;
+        gap: 5px;
+      }
+
+      .btn {
+        margin-top: 10px;
+        padding: 8px 12px;
+        font-size: 16px;
+        cursor: pointer;
+      }
+
+      .space {
+        display: block;
+        width: 45px;
+      }
+    </style>
+  </head>
+  <body>
+    <input type="file" accept="audio/*" id="fileInput" />
+    <div id="musicPlayer">
+      <audio id="audio" src="./sample.mp3" controls="true"></audio>
+    </div>
+    <input type="text" id="timeCode" value="00:00:000" />
+    <div class="flex">
+      <button class="btn" data-addtime="-1">-1 ms</button>
+      <button class="btn" data-addtime="-5">-5 ms</button>
+      <button class="btn" data-addtime="-15">-15 ms</button>
+      <button class="btn" data-addtime="-300">-300 ms</button>
+      <button class="btn" data-addtime="-1000">-1 s</button>
+      <div class="space"></div>
+      <button class="btn" data-addtime="1000">+1 s</button>
+      <button class="btn" data-addtime="300">+300 ms</button>
+      <button class="btn" data-addtime="15">+15 ms</button>
+      <button class="btn" data-addtime="5">+5 ms</button>
+      <button class="btn" data-addtime="1">+1 ms</button>
+    </div>
+    <button id="addMarkerBtn" class="btn">Ajouter un marqueur</button>
+    <div id="markers"></div>
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        let audio = document.getElementById("audio");
+        let timeInput = document.getElementById("timeCode");
+        let markersContainer = document.getElementById("markers");
+        let markers = [];
+
+        audio.addEventListener("timeupdate", function () {
+          const minutes = Math.floor(audio.currentTime / 60);
+          const seconds = Math.floor(audio.currentTime % 60);
+          const milliseconds = Math.floor((audio.currentTime % 1) * 1000);
+          timeInput.value = `${String(minutes).padStart(2, "0")}:${String(
+            seconds
+          ).padStart(2, "0")}:${String(milliseconds).padStart(3, "0")}`;
+        });
+
+        document
+          .getElementById("fileInput")
+          .addEventListener("change", function (e) {
+            const file = e.target.files[0];
+            audio.src = URL.createObjectURL(file);
+          });
+
+        document.querySelectorAll(".btn").forEach(function (button) {
+          button.addEventListener("click", function () {
+            const addTime = parseInt(button.dataset.addtime);
+            if (audio) {
+              audio.currentTime += addTime / 1000;
+            }
+          });
+        });
+
+        document.addEventListener("keydown", function (event) {
+          const focusedElement = document.activeElement.tagName.toLowerCase();
+          if (
+            focusedElement !== "input" &&
+            (event.key === " " || event.key === "k")
+          ) {
+            event.preventDefault();
+            if (audio.paused) {
+              audio.play();
+            } else {
+              audio.pause();
+            }
+          }
+        });
+
+        function addMarker() {
+          const markerTime = audio.currentTime;
+          const markerButton = document.createElement("button");
+          const markerSubContainer = document.createElement("div");
+          const markerTitle = document.createElement("input");
+
+          markerButton.textContent = formatTime(markerTime);
+
+          markerTitle.value = `Marqueur ${markers.length + 1}`;
+          markerSubContainer.appendChild(markerTitle);
+
+          markerSubContainer.appendChild(markerButton);
+          markers.push(markerTime);
+
+          markerButton.addEventListener("click", function () {
+            audio.currentTime = markerTime;
+          });
+
+          const deleteButton = document.createElement("button");
+          deleteButton.textContent = "Supprimer";
+          markerSubContainer.appendChild(deleteButton);
+
+          markersContainer.appendChild(markerSubContainer);
+
+          deleteButton.addEventListener("click", function () {
+            const index = markers.indexOf(markerTime);
+            if (index !== -1) {
+              markers.splice(index, 1);
+              markersContainer.removeChild(markerSubContainer);
+            }
+          });
+        }
+
+        function formatTime(time) {
+          const minutes = Math.floor(time / 60);
+          const seconds = Math.floor(time % 60);
+          const milliseconds = Math.floor((time % 1) * 1000);
+          return `${String(minutes).padStart(
+            2,
+            "0"
+          )}:${String(seconds).padStart(2, "0")}:${String(milliseconds).padStart(3, "0")}`;
+        }
+
+        document
+          .getElementById("addMarkerBtn")
+          .addEventListener("click", addMarker);
+      });
+    </script>
+  </body>
+</html>
